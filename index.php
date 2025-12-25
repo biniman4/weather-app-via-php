@@ -242,25 +242,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Mode Toggle (Static/API) -->
                 <div class="control-pill">
                     <i class="bi bi-hdd-network"></i>
-                    <div class="form-check form-switch m-0 min-h-0">
-                        <input class="form-check-input" type="checkbox" id="offlineMode" onchange="toggleMode()">
-                        <label class="form-check-label small" for="offlineMode" id="modeStatus">API</label>
-                    </div>
+                    <label class="adv-toggle">
+                        <input type="checkbox" id="offlineMode" onchange="toggleMode()">
+                        <span class="adv-slider"></span>
+                    </label>
+                    <span class="pill-label" id="modeStatus">API</span>
                 </div>
 
                 <!-- Unit Toggle -->
                 <div class="control-pill">
-                    <span class="small fw-bold">°C / °F</span>
-                    <button class="theme-toggle-btn ms-1" onclick="document.getElementById('unitToggle').click()">
-                        <div class="form-check form-switch m-0 min-h-0">
-                            <!-- Hidden checkbox that drives logic -->
-                            <input class="form-check-input" type="checkbox" id="unitToggle" onchange="toggleUnitFromHeader()">
-                        </div>
-                    </button>
+                    <span class="pill-label">°C / °F</span>
+                    <label class="adv-toggle">
+                        <input type="checkbox" id="unitToggle" onchange="toggleUnitFromHeader()">
+                        <span class="adv-slider"></span>
+                    </label>
                 </div>
 
                 <!-- Theme Toggle -->
-                <button class="theme-toggle-btn p-2 rounded-circle border" onclick="toggleTheme()" title="Toggle Theme">
+                <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Theme">
                    <i class="bi bi-moon-stars"></i>
                    <!-- Hidden checkbox for state tracking -->
                    <input type="checkbox" id="themeToggle" class="d-none" onchange="toggleTheme()">

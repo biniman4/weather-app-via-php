@@ -161,47 +161,95 @@ header {
 }
 
 .control-pill {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    padding: 0.4rem 0.5rem 0.4rem 0.8rem;
-    border-radius: 99px;
+    background: #FFFFFF;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 0.6rem 1.25rem;
+    border-radius: 100px;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    backdrop-filter: var(--glass-blur);
-    /* Glass! */
-    box-shadow: var(--shadow-sm);
+    gap: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
     transition: all var(--transition-fast);
 }
 
-.control-pill:hover {
-    border-color: var(--accent-secondary);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-sm), var(--glow-primary);
+.pill-label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #4A5568;
+    letter-spacing: -0.01em;
+}
+
+/* Custom Advanced Toggle Switch */
+.adv-toggle {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.adv-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.adv-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #E2E8F0;
+    transition: .3s;
+    border-radius: 24px;
+}
+
+.adv-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #A0AEC0;
+    transition: .3s;
+    border-radius: 50%;
+}
+
+input:checked+.adv-slider {
+    background-color: #4F46E5;
+}
+
+input:checked+.adv-slider:before {
+    transform: translateX(20px);
+    background-color: #FFFFFF;
 }
 
 .theme-toggle-btn {
-    border: 1px solid var(--border-color);
-    background: var(--bg-card);
+    width: 48px;
+    height: 48px;
+    background: #0F172A;
+    border: none;
     border-radius: 50%;
-    width: 42px;
-    height: 42px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-main);
+    color: #FFFFFF;
+    font-size: 1.25rem;
     cursor: pointer;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.2);
     transition: all var(--transition-smooth);
 }
 
 .theme-toggle-btn:hover {
-    transform: rotate(15deg) scale(1.05);
-    background: var(--text-main);
-    color: var(--bg-body);
+    transform: scale(1.1);
+    background: #1E293B;
+}
+
+[data-theme="dark"] .theme-toggle-btn {
+    background: #F8FAFC;
+    color: #0F172A;
 }
 
 /* ============================================================
