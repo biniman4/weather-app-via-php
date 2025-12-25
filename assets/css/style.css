@@ -1,0 +1,670 @@
+/**
+ * Dynamic Weather Info Display - Premium Theme
+ * 
+ * "Impressive" Aesthetics: Animated gradients, deep glassmorphism, 
+ * sophisticated typography (Outfit), and dynamic glows.
+ */
+
+/* ============================================================
+   ROOT VARIABLES & THEME SYSTEM
+   ============================================================ */
+
+:root {
+    /* Core Palette - Premium & Vivid */
+    --accent-primary: #4f46e5;
+    /* Indigo */
+    --accent-secondary: #0ea5e9;
+    /* Sky Blue */
+    --accent-gradient: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+
+    /* Light Mode (Default) - Sophisticated White/Grey */
+    --bg-body: #f8fafc;
+    --bg-card: rgba(255, 255, 255, 0.85);
+    /* More opacity for depth */
+    --text-main: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border-color: rgba(255, 255, 255, 0.6);
+
+    /* Shadows & Glows */
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+    --glow-primary: 0 0 20px rgba(79, 70, 229, 0.15);
+
+    /* Glass Effect */
+    --glass-blur: blur(16px);
+    --glass-saturate: saturate(180%);
+
+    /* Layout */
+    --radius-lg: 28px;
+    --radius-md: 16px;
+    --radius-sm: 10px;
+    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    /* Elegant spring */
+}
+
+/* Dark Mode Overrides - Deep & Rich */
+[data-theme="dark"] {
+    --bg-body: #0f172a;
+    --bg-card: rgba(30, 41, 59, 0.7);
+    --text-main: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #64748b;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    --glow-primary: 0 0 25px rgba(14, 165, 233, 0.2);
+}
+
+/* ============================================================
+   BASE STYLES
+   ============================================================ */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+    /* Setup for new font */
+    background: var(--bg-body);
+    color: var(--text-main);
+    line-height: 1.6;
+    transition: background-color var(--transition-smooth), color var(--transition-smooth);
+    min-height: 100vh;
+    padding-bottom: 4rem;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Animated Ambient Background for "Wow" factor */
+body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 50% 50%, rgba(79, 70, 229, 0.08), transparent 60%),
+        radial-gradient(circle at 80% 20%, rgba(14, 165, 233, 0.08), transparent 50%);
+    z-index: -1;
+    animation: ambientShift 20s ease-in-out infinite alternate;
+    pointer-events: none;
+}
+
+@keyframes ambientShift {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    100% {
+        transform: translate(-5%, -5%) scale(1.1);
+    }
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* ============================================================
+   HEADER COMPONENT
+   ============================================================ */
+
+header {
+    padding: 2rem 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.brand-area {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform var(--transition-fast);
+}
+
+.brand-area:hover {
+    transform: translateX(4px);
+}
+
+.weather-logo {
+    font-size: 2.25rem;
+    background: var(--accent-gradient);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 4px rgba(79, 70, 229, 0.2));
+}
+
+.brand-text h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin: 0;
+    line-height: 1;
+}
+
+.brand-text p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin: 4px 0 0 0;
+}
+
+/* Pill Controls */
+.header-controls {
+    display: flex;
+    gap: 1rem;
+}
+
+.control-pill {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    padding: 0.4rem 0.5rem 0.4rem 0.8rem;
+    border-radius: 99px;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    backdrop-filter: var(--glass-blur);
+    /* Glass! */
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-fast);
+}
+
+.control-pill:hover {
+    border-color: var(--accent-secondary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm), var(--glow-primary);
+}
+
+.theme-toggle-btn {
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-main);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-smooth);
+}
+
+.theme-toggle-btn:hover {
+    transform: rotate(15deg) scale(1.05);
+    background: var(--text-main);
+    color: var(--bg-body);
+}
+
+/* ============================================================
+   HERO TEXT
+   ============================================================ */
+
+.hero-text {
+    text-align: center;
+    margin: 3rem 0;
+}
+
+.hero-text h2 {
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(180deg, var(--text-main) 20%, var(--text-secondary) 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.04em;
+    margin-bottom: 0.75rem;
+}
+
+.hero-text p {
+    font-size: 1.15rem;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* ============================================================
+   SEARCH BAR ENHANCED
+   ============================================================ */
+
+.search-container {
+    max-width: 650px;
+    margin: 0 auto 3.5rem auto;
+    position: relative;
+    z-index: 50;
+}
+
+.search-input-group {
+    background: var(--bg-card);
+    padding: 0.6rem;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    transition: all var(--transition-smooth);
+    backdrop-filter: var(--glass-blur);
+}
+
+.search-input-group:focus-within {
+    transform: translateY(-2px) scale(1.01);
+    border-color: var(--accent-primary);
+    box-shadow: 0 25px 50px -12px rgba(79, 70, 229, 0.15);
+}
+
+/* Autocomplete Suggestions Box */
+.suggestions-container {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    margin-top: 8px;
+    box-shadow: var(--shadow-hover);
+    z-index: 1000;
+    overflow: hidden;
+    backdrop-filter: var(--glass-blur);
+    /* Glass Effect */
+    animation: fadeInUp 0.2s ease-out;
+}
+
+.suggestion-item {
+    padding: 12px 20px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-main);
+    font-size: 0.95rem;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover {
+    background: rgba(59, 130, 246, 0.08);
+    /* Light Blue Tint */
+    color: var(--accent-blue);
+}
+
+.suggestion-item i {
+    color: var(--text-secondary);
+    font-size: 0.9em;
+}
+
+.suggestion-item:hover i {
+    color: var(--accent-blue);
+}
+
+#cityInput {
+    border: none;
+    background: transparent;
+    padding: 0.75rem 1rem;
+    font-size: 1.1rem;
+    width: 100%;
+    color: var(--text-main);
+    font-weight: 500;
+}
+
+#cityInput:focus {
+    outline: none;
+}
+
+#cityInput::placeholder {
+    color: var(--text-muted);
+}
+
+.btn-search {
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    background: var(--accent-gradient);
+    color: white;
+    border: none;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    transition: all var(--transition-fast);
+}
+
+.btn-search:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+}
+
+#geoBtn i {
+    font-size: 1.25rem;
+    color: var(--accent-secondary);
+}
+
+#geoBtn:hover i {
+    color: var(--accent-primary);
+}
+
+/* Quick Cities Pills */
+.popular-cities {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.city-link {
+    font-size: 0.85rem;
+    padding: 0.4rem 1rem;
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: 99px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.city-link:hover {
+    background: white;
+    color: var(--accent-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ============================================================
+   MAIN DASHBOARD CARD (Centerpiece)
+   ============================================================ */
+
+.weather-dashboard-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 3.5rem;
+    border: 1px solid var(--border-color);
+    /* Deep Glassmorphism with Backdrop Filter */
+    backdrop-filter: var(--glass-blur) var(--glass-saturate);
+    -webkit-backdrop-filter: var(--glass-blur) var(--glass-saturate);
+    box-shadow: var(--shadow-lg), inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+    position: relative;
+    overflow: visible;
+    /* Let shadows/glows spill out */
+    transition: all var(--transition-smooth);
+}
+
+.weather-dashboard-card:hover {
+    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+/* Location Header */
+.weather-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 3rem;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.03);
+    padding-bottom: 1.5rem;
+}
+
+.location-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text-main);
+}
+
+.location-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin-left: 0.5rem;
+}
+
+.coords-debug {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: rgba(0, 0, 0, 0.03);
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 0.5rem;
+}
+
+.coords-debug i {
+    color: var(--accent-primary);
+    font-size: 0.9rem;
+}
+
+/* Main Row */
+.weather-icon-container {
+    background: radial-gradient(circle, rgba(79, 70, 229, 0.05) 0%, transparent 70%);
+    border-radius: 50%;
+    padding: 1rem;
+}
+
+.main-icon {
+    width: 140px;
+    height: 140px;
+    filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.1));
+    transform: scale(1.1);
+}
+
+.main-temp {
+    font-size: 5.5rem;
+    font-weight: 800;
+    letter-spacing: -3px;
+    line-height: 1;
+    background: linear-gradient(180deg, var(--text-main) 30%, var(--text-secondary) 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.main-desc {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--accent-primary);
+    text-transform: capitalize;
+    margin-top: 0.5rem;
+}
+
+/* Stats Grid */
+.stats-grid-compact {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.stat-item {
+    background: var(--bg-body);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 1.25rem;
+    text-align: center;
+    transition: all var(--transition-fast);
+}
+
+.stat-item:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent-secondary);
+    box-shadow: var(--shadow-sm);
+}
+
+.stat-icon {
+    font-size: 1.75rem;
+    background: var(--accent-gradient);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-main);
+    display: block;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+/* ============================================================
+   5-DAY FORECAST CARDS
+   ============================================================ */
+
+.forecast-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+}
+
+.forecast-day-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 22px;
+    padding: 1.5rem 0.5rem;
+    text-align: center;
+    transition: all var(--transition-fast);
+    backdrop-filter: blur(10px);
+}
+
+.forecast-day-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.08);
+    /* Lift effect */
+    border-color: var(--accent-primary);
+}
+
+.f-day {
+    font-weight: 700;
+    color: var(--text-secondary);
+    display: block;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+}
+
+.f-temp-high {
+    font-weight: 800;
+    color: var(--text-main);
+    font-size: 1.2rem;
+}
+
+/* ============================================================
+   ANIMATIONS & ENTRANCE
+   ============================================================ */
+
+/* Staggered Entrance */
+.animate-in {
+    opacity: 0;
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-delay-1 {
+    animation-delay: 0.1s;
+}
+
+.animate-delay-2 {
+    animation-delay: 0.2s;
+}
+
+.animate-delay-3 {
+    animation-delay: 0.3s;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Floating Animation for Main Icon */
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* ============================================================
+   RESPONSIVE POLISHING
+   ============================================================ */
+
+@media (max-width: 768px) {
+    .weather-dashboard-card {
+        padding: 2rem 1.5rem;
+    }
+
+    .hero-text h2 {
+        font-size: 2.25rem;
+    }
+
+    .weather-main-row {
+        flex-direction: column;
+        text-align: center;
+        gap: 2rem;
+    }
+
+    .weather-left-col,
+    .main-temp-group {
+        flex-direction: column;
+        text-align: center;
+        width: 100%;
+    }
+
+    .main-temp {
+        font-size: 4rem;
+    }
+
+    .forecast-container {
+        display: flex;
+        overflow-x: auto;
+        padding: 10px;
+        /* Space for scroll shadow */
+        gap: 1rem;
+        scroll-snap-type: x mandatory;
+    }
+
+    .forecast-day-card {
+        min-width: 140px;
+        scroll-snap-align: start;
+    }
+}
