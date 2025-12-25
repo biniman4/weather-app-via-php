@@ -478,9 +478,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
         
         <!-- Footer -->
-        <footer class="text-center mt-auto">
+        <footer class="text-center mt-auto pb-4">
             <p class="small text-secondary m-0">
-                Weather Info Display • Frontend Demo
+                Weather app &copy; 2025
             </p>
         </footer>
         

@@ -629,8 +629,30 @@ header {
    ============================================================ */
 
 @media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        gap: 1.5rem;
+        text-align: center;
+        padding-bottom: 2rem;
+    }
+
+    .brand-area {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+
+    .brand-text h1 {
+        font-size: 1.75rem;
+    }
+
+    .header-controls {
+        justify-content: center;
+        width: 100%;
+    }
+
     .weather-dashboard-card {
-        padding: 2rem 1.5rem;
+        padding: 2.5rem 1.5rem;
     }
 
     .hero-text h2 {
@@ -640,31 +662,61 @@ header {
     .weather-main-row {
         flex-direction: column;
         text-align: center;
-        gap: 2rem;
+        gap: 2.5rem;
     }
 
-    .weather-left-col,
-    .main-temp-group {
+    .weather-header {
         flex-direction: column;
+        align-items: center;
         text-align: center;
-        width: 100%;
+        gap: 1rem;
     }
 
     .main-temp {
-        font-size: 4rem;
+        font-size: 4.5rem;
+    }
+
+    .stats-grid-compact {
+        gap: 1rem;
+    }
+
+    .stat-item {
+        padding: 1rem;
     }
 
     .forecast-container {
         display: flex;
         overflow-x: auto;
-        padding: 10px;
-        /* Space for scroll shadow */
+        padding: 10px 5px;
         gap: 1rem;
         scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
     }
 
     .forecast-day-card {
-        min-width: 140px;
-        scroll-snap-align: start;
+        min-width: 130px;
+        scroll-snap-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0 1rem;
+    }
+
+    .hero-text h2 {
+        font-size: 1.75rem;
+    }
+
+    .location-title {
+        font-size: 1.75rem;
+    }
+
+    .main-temp {
+        font-size: 3.5rem;
+    }
+
+    .stats-grid-compact {
+        grid-template-columns: 1fr;
     }
 }
