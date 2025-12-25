@@ -198,6 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     <!-- SEO Meta Tags -->
     <title>Weather app</title>
+    <link rel="icon" type="image/png" href="assets/images/weather app icon.png">
     <meta name="description" content="Get real-time weather information for any city worldwide. View temperature, humidity, wind speed, and current conditions with our dynamic weather application.">
     <meta name="keywords" content="weather, weather app, real-time weather, temperature, humidity, wind speed">
     <meta name="author" content="Weather App">
@@ -229,7 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Header Section -->
         <header>
             <div class="brand-area animate-in">
-                <img src="assets/images/weather app icon.png" alt="Weather app Logo" class="brand-logo-img">
+                <i class="bi bi-cloud-haze2 weather-logo"></i>
                 <div class="brand-text">
                     <h1>Weather app</h1>
                     <p>Real-time weather updates</p>
