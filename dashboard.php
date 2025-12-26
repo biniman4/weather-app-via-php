@@ -1,35 +1,27 @@
 <?php
 /**
- * Main application logic for the Weather App.
- * Handles API requests for both city searches and coordinate-based geolocation.
+ * User Dashboard - Redirects to Home Page
+ * The dashboard is the same as the homepage, just with user logged in
  */
 
 require_once 'config.php';
+require_once 'auth.php';
+require_once 'db.php';
 
-// Initialize authentication if database is available
-$currentUser = null;
-$authAvailable = false;
+startSecureSession();
+requireLogin('dashboard.php');
 
-try {
-    require_once 'db.php';  // Load database connection first
-    require_once 'auth.php';  // Then load auth functions
-    startSecureSession();
-    $currentUser = getUserData();  // Now safe to call getUserData()
-    $authAvailable = true;
-} catch (Exception $e) {
-    // Database not set up yet - auth features will be disabled
-    error_log("Auth initialization failed: " . $e->getMessage());
-}
+// Redirect to homepage - the dashboard IS the homepage when logged in
+header("Location: index.php" . (isset($_GET['welcome']) ? '?welcome=1' : ''));
+exit;
 
-$weatherData = null;
-$errorMessage = '';
+?>
 $cityName = '';
 $clientSideFallback = false;
 $nearestCityNote = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
-    // Check for city name or direct coordinates from the frontend.
     $inputCity = isset($_POST['city']) ? trim($_POST['city']) : '';
     $latInput = isset($_POST['lat']) ? $_POST['lat'] : '';
     $lonInput = isset($_POST['lon']) ? $_POST['lon'] : '';
@@ -46,12 +38,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $lon = null;
         $foundName = '';
 
-        // If coordinates are provided, perform reverse geocoding to find the city name.
         if (!empty($latInput) && !empty($lonInput)) {
             $lat = filter_var($latInput, FILTER_VALIDATE_FLOAT);
             $lon = filter_var($lonInput, FILTER_VALIDATE_FLOAT);
             
-            // 1. Primary: Use OpenWeatherMap Geocoding API (returns recognized city names).
             $owmRevUrl = "http://api.openweathermap.org/geo/1.0/reverse?lat={$lat}&lon={$lon}&limit=1&appid=" . API_KEY;
             $ch_owm = curl_init();
             curl_setopt($ch_owm, CURLOPT_URL, $owmRevUrl);
@@ -64,67 +54,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!empty($owmData) && isset($owmData[0]['name'])) {
                 $foundName = $owmData[0]['name'];
-                
-                // If the name is a sub-district or very specific, try finding a major city nearby.
-                $subDistricts = ['Kirkos', 'Arada', 'Addis Ketema', 'Lideta', 'Yeka', 'Bole', 'Akaki-Kality', 'Nifas Silk-Lafto', 'Kolfe Keranio', 'Gullele'];
-                if (in_array($foundName, $subDistricts)) {
-                    $foundName .= ", Addis Ababa";
-                }
-
-                // Regional prediction: If we are in the Harar/Haramaya area but the name is obscure.
-                // Haramaya is approx 9.4, 42.0. Harar is 9.3, 42.1.
-                if (($lat > 9.39 && $lat < 9.40 && $lon > 42.01 && $lon < 42.02) || ($lat > 9.0 && $lat < 9.8 && $lon > 41.5 && $lon < 42.5)) {
-                    if (strpos($foundName, 'Haramaya') === false && strpos($foundName, 'Ale Maya') === false) {
-                        $foundName = "Haramaya (Ale Maya)";
-                    }
-                }
-                
                 $cityName = $foundName;
             } else {
-                // 2. Fallback: Use Nominatim (OpenStreetMap) for more detailed but potentially obscure names.
-                $nominatimUrl = "https://nominatim.openstreetmap.org/reverse?format=json&lat={$lat}&lon={$lon}&addressdetails=1&accept-language=en";
-                $ch_rev = curl_init();
-                curl_setopt($ch_rev, CURLOPT_URL, $nominatimUrl);
-                curl_setopt($ch_rev, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch_rev, CURLOPT_TIMEOUT, 5);
-                curl_setopt($ch_rev, CURLOPT_SSL_VERIFYPEER, false);
-                curl_setopt($ch_rev, CURLOPT_USERAGENT, 'WeatherApp-AgenticMode-v1.0');
-                $revResponse = curl_exec($ch_rev);
-                curl_close($ch_rev);
-                $revData = json_decode($revResponse, true);
-                
-                if (!empty($revData) && isset($revData['address'])) {
-                    $addr = $revData['address'];
-                    
-                    // Prioritize recognizable city/town over smaller entities like village/hamlet.
-                    $recognizedPlace = $addr['city'] ?? $addr['town'] ?? $addr['municipality'] ?? $addr['county'] ?? '';
-                    $smallerPlace = $addr['village'] ?? $addr['hamlet'] ?? $addr['suburb'] ?? $addr['neighbourhood'] ?? '';
-                    
-                    if (!empty($recognizedPlace)) {
-                        $foundName = $recognizedPlace;
-                    } elseif (!empty($smallerPlace)) {
-                        $foundName = "{$smallerPlace} (Near Haramaya)";
-                    } else {
-                        $foundName = $revData['name'] ?? "Haramaya";
-                    }
-                    
-                    $cityName = $foundName;
-                } else {
-                    $foundName = "Haramaya";
-                }
+                $foundName = "Haramaya";
             }
         } else {
-            // Get coordinates for the searched city name using the Geocoding API.
             $searchQuery = $inputCity;
-            // Map Ale Maya variants to Haramaya for better API recognition.
-            $aleMayaNames = ['Ale Maya', 'Alem Maya', 'Alemaya', 'Ale Maya Ethiopia', 'Alemaya Ethiopia'];
-            foreach ($aleMayaNames as $name) {
-                if (strcasecmp($inputCity, $name) === 0) {
-                    $searchQuery = 'Haramaya';
-                    break;
-                }
-            }
-            
             $geoUrl = "http://api.openweathermap.org/geo/1.0/direct?q=" . urlencode($searchQuery) . "&limit=1&lang=en&appid=" . API_KEY;
             
             $ch_geo = curl_init();
@@ -133,24 +68,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             curl_setopt($ch_geo, CURLOPT_TIMEOUT, 5);
             curl_setopt($ch_geo, CURLOPT_SSL_VERIFYPEER, false);
             $geoResponse = curl_exec($ch_geo);
-            $geoHttpCode = curl_getinfo($ch_geo, CURLINFO_HTTP_CODE);
             curl_close($ch_geo);
             
             $geoData = json_decode($geoResponse, true);
             
-            if ($geoHttpCode === 200 && !empty($geoData)) {
+            if (!empty($geoData)) {
                 $lat = $geoData[0]['lat'];
                 $lon = $geoData[0]['lon'];
                 $foundName = $geoData[0]['name'];
-                
-                // Add a note if the found city name differs significantly from the search input.
-                if (strcasecmp($inputCity, $foundName) !== 0 && stripos($foundName, $inputCity) === false) {
-                     $nearestCityNote = "Results for <strong>$foundName</strong> (nearest match to '$inputCity')";
-                }
             }
         }
 
-        // Once we have valid coordinates, fetch the current weather and 5-day forecast.
         if ($lat !== null && $lon !== null) {
 
             $apiUrl = "https://api.openweathermap.org/data/2.5/weather?lat={$lat}&lon={$lon}&units=" . DEFAULT_UNIT . "&lang=en&appid=" . API_KEY;
@@ -182,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'timestamp' => time()
                 ];
                 
-                // Fetch forecast data.
+                // Fetch forecast
                 $forecastUrl = "https://api.openweathermap.org/data/2.5/forecast?lat={$lat}&lon={$lon}&units=" . DEFAULT_UNIT . "&lang=en&appid=" . API_KEY;
                 $ch_f = curl_init();
                 curl_setopt($ch_f, CURLOPT_URL, $forecastUrl);
@@ -199,26 +127,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $today = date('Y-m-d');
                     foreach ($forecastData['list'] as $item) {
                         $date = substr($item['dt_txt'], 0, 10);
-                        // Process one entry per day, ideally around noon.
                         if ($date != $today && !in_array($date, $processedDates) && count($dailyForecast) < 5) {
                             if (strpos($item['dt_txt'], '12:00:00') !== false) {
-                                $dailyForecast[] = [
-                                    'day' => date('D', strtotime($date)),
-                                    'date' => date('M j', strtotime($date)),
-                                    'temp_max' => round($item['main']['temp_max']),
-                                    'temp_min' => round($item['main']['temp_min']),
-                                    'icon' => $item['weather'][0]['icon'],
-                                    'description' => $item['weather'][0]['main']
-                                ];
-                                $processedDates[] = $date;
-                            }
-                        }
-                    }
-                    // Secondary loop to fill in days if noon data is missing.
-                    if (count($dailyForecast) < 5) {
-                         foreach ($forecastData['list'] as $item) {
-                            $date = substr($item['dt_txt'], 0, 10);
-                            if ($date != $today && !in_array($date, $processedDates) && count($dailyForecast) < 5) {
                                 $dailyForecast[] = [
                                     'day' => date('D', strtotime($date)),
                                     'date' => date('M j', strtotime($date)),
@@ -236,7 +146,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  $errorMessage = "Weather data unavailable for this location.";
             }
         } else {
-            // City not found or search failed.
             $cityName = 'Haramaya';
             $errorMessage = "City '$inputCity' not found. Falling back to Haramaya...";
             $clientSideFallback = true;
@@ -249,19 +158,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Dashboard - Weather App</title>
     
-    <!-- SEO Meta Tags -->
-    <link rel="icon" type="image/png" href="assets/images/favicon.png">
-    <title>Weather app</title>
-    <meta name="description" content="Get real-time weather information for any city worldwide. View temperature, humidity, wind speed, and current conditions with our dynamic weather application.">
-    <meta name="keywords" content="weather, weather app, real-time weather, temperature, humidity, wind speed">
-    <meta name="author" content="Weather App">
-    
-    <!-- External Dependencies -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -282,46 +182,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="brand-area animate-in">
                 <i class="bi bi-cloud-haze2 weather-logo"></i>
                 <div class="brand-text">
-                    <?php if ($authAvailable && isLoggedIn() && $currentUser): ?>
-                        <h1>Hello, <?php echo htmlspecialchars($currentUser['username']); ?>! 👋</h1>
-                        <p>Welcome back to your weather dashboard</p>
-                    <?php else: ?>
-                        <h1>Weather app</h1>
-                        <p>Real-time weather updates</p>
-                    <?php endif; ?>
+                    <h1>Weather Dashboard</h1>
+                    <p>Welcome back, <?php echo htmlspecialchars($currentUser['username']); ?>!</p>
                 </div>
             </div>
             
             <div class="header-controls animate-in animate-delay-1">
+                <a href="index.php" class="btn-auth" style="text-decoration: none; padding: 8px 18px; background: rgba(255, 255, 255, 0.9); color: #667eea; border-radius: 8px; font-size: 0.9rem; font-weight: 600; border: 2px solid #667eea;">
+                    <i class="bi bi-house"></i> Home
+                </a>
+                <a href="logout.php" class="btn-auth" style="text-decoration: none; padding: 8px 18px; background: #e74c3c; color: white; border-radius: 8px; font-size: 0.9rem; font-weight: 600;">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
                 
-                <?php if ($authAvailable && isLoggedIn() && $currentUser): ?>
-                    <!-- Logged In - Show Logout Icon -->
-                    <a href="logout.php" class="btn-auth btn-logout-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; background: #e74c3c; color: white; border-radius: 50%; text-decoration: none; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);" title="Logout">
-                        <i class="bi bi-box-arrow-right" style="font-size: 1.2rem;"></i>
-                    </a>
-                <?php elseif ($authAvailable): ?>
-                    <!-- Not Logged In - Show Auth Buttons -->
-                    <div class="auth-buttons" style="display: flex; gap: 10px; align-items: center;">
-                        <a href="login.php" class="btn-auth btn-login" style="text-decoration: none; padding: 10px 24px; background: rgba(255, 255, 255, 0.9); color: #667eea; border-radius: 10px; font-size: 0.95rem; font-weight: 600; transition: all 0.3s ease; border: 2px solid #667eea;">
-                            <i class="bi bi-box-arrow-in-right"></i> Login
-                        </a>
-                        <a href="register.php" class="btn-auth btn-get-started" style="text-decoration: none; padding: 10px 24px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 10px; font-size: 0.95rem; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
-                            <i class="bi bi-rocket-takeoff"></i> Get Started
-                        </a>
-                    </div>
-                <?php endif; ?>
-                
-                <!-- Data Source Toggle -->
-                <div class="control-pill">
-                    <i class="bi bi-hdd-network"></i>
-                    <label class="adv-toggle">
-                        <input type="checkbox" id="offlineMode" onchange="toggleMode()">
-                        <span class="adv-slider"></span>
-                    </label>
-                    <span class="pill-label" id="modeStatus">API</span>
-                </div>
-
-                <!-- Temperature Unit Toggle -->
                 <div class="control-pill">
                     <span class="pill-label">°C / °F</span>
                     <label class="adv-toggle">
@@ -330,7 +203,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </label>
                 </div>
 
-                <!-- Dark/Light Theme Switcher -->
                 <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Theme">
                    <i class="bi bi-moon-stars"></i>
                    <input type="checkbox" id="themeToggle" class="d-none" onchange="toggleTheme()">
@@ -338,23 +210,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </header>
         
-        <!-- Hero Section -->
-        <section class="hero-text animate-in animate-delay-2">
-            <h2>Weather at Your Fingertips</h2>
-            <p>Get real-time weather updates for any city using OpenWeatherMap data.</p>
-        </section>
-        
-        <?php if ($authAvailable && isLoggedIn() && isset($_GET['welcome'])): ?>
+        <?php if ($welcomeMessage): ?>
         <section class="animate-in">
             <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
                 <i class="bi bi-check-circle-fill me-2"></i>
-                <strong>Welcome!</strong> You're now logged in. Enjoy personalized weather updates!
+                <strong>Welcome!</strong> Your account has been created successfully. Start exploring weather updates!
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         </section>
         <?php endif; ?>
+        
+        <section class="hero-text animate-in animate-delay-2">
+            <h2>Your Personal Weather Hub</h2>
+            <p>Track weather for your favorite locations</p>
+        </section>
 
-        <!-- Search and Geolocation -->
         <section class="search-container animate-in animate-delay-3">
             <form method="POST" action="" id="weatherForm" class="needs-validation" novalidate>
                 <input type="hidden" name="lat" id="latInput">
@@ -379,7 +249,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 
                 <div id="suggestionsBox" class="suggestions-container d-none"></div>
-                <div class="invalid-feedback text-center mt-2 d-block"></div>
                 
                 <div class="text-center mt-3">
                     <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="getLocation()">
@@ -387,27 +256,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </button>
                 </div>
             </form>
-                <div class="popular-cities animate-in animate-delay-2">
-                    <span class="city-link" onclick="quickSearch('Ale Maya')">Ale Maya</span>
-                    <span class="city-link" onclick="quickSearch('Addis Ababa')">Addis Ababa</span>
-                    <span class="city-link" onclick="quickSearch('London')">London</span>
-                    <span class="city-link" onclick="quickSearch('Tokyo')">Tokyo</span>
-                    <span class="city-link" onclick="quickSearch('Paris')">Paris</span>
-                </div>
+            
+            <div class="popular-cities animate-in animate-delay-2">
+                <span class="city-link" onclick="quickSearch('Ale Maya')">Ale Maya</span>
+                <span class="city-link" onclick="quickSearch('Addis Ababa')">Addis Ababa</span>
+                <span class="city-link" onclick="quickSearch('London')">London</span>
+                <span class="city-link" onclick="quickSearch('Tokyo')">Tokyo</span>
+                <span class="city-link" onclick="quickSearch('Paris')">Paris</span>
+            </div>
         </section>
         
-        <!-- Alerts and Error Messages -->
         <?php if (!empty($errorMessage)): ?>
         <section class="error-section mb-4 animate-in">
             <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
                 <i class="bi bi-exclamation-circle-fill me-2"></i>
                 <strong>Notice:</strong> <?php echo htmlspecialchars($errorMessage); ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         </section>
         <?php endif; ?>
         
-        <!-- Main Weather Display -->
         <?php if ($weatherData): ?>
         <section class="weather-display animate-in">
             
@@ -418,16 +286,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <?php echo htmlspecialchars($weatherData['city']); ?>
                             <span class="location-subtitle"><?php echo htmlspecialchars($weatherData['country']); ?></span>
                         </div>
-                        <div class="coords-debug animate-in animate-delay-1">
-                            <i class="bi bi-geo-alt"></i> 
-                            <?php echo number_format($weatherData['lat'], 4); ?>°, <?php echo number_format($weatherData['lon'], 4); ?>°
-                            <span id="accuracyLabel" class="ms-2 badge bg-light text-dark fw-normal d-none" style="font-size: 0.7rem;"></span>
-                        </div>
-                        <?php if (!empty($nearestCityNote)): ?>
-                            <div class="text-warning small mt-1 animate-in animate-delay-1">
-                                <i class="bi bi-info-circle-fill me-1"></i> <?php echo $nearestCityNote; ?>
-                            </div>
-                        <?php endif; ?>
                     </div>
                     <div class="update-time d-none d-sm-block">
                         <i class="bi bi-clock-history me-1"></i> Updated just now
@@ -453,12 +311,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="main-desc">
                                 <?php echo htmlspecialchars($weatherData['condition']); ?>
                             </div>
-                             <button class="d-none" id="toggleUnit" onclick="toggleTemperatureUnit()"></button>
                         </div>
                     </div>
 
                      <div class="weather-right-col">
-                        <!-- Perceived Temperature -->
                         <div class="bg-body rounded-4 p-3 mb-3 text-center d-inline-block w-100 border">
                             <i class="bi bi-thermometer-half text-warning me-1"></i>
                             <span class="text-secondary small text-uppercase fw-bold">Feels like</span>
@@ -470,7 +326,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                         </div>
 
-                        <!-- Comprehensive Stats Grid -->
                         <div class="stats-grid-compact">
                              <div class="stat-item">
                                 <i class="bi bi-droplet stat-icon"></i>
@@ -496,24 +351,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      </div>
                 </div>
 
-                <!-- UV Index Overview -->
-                <div class="uv-section">
-                    <div class="uv-header">
-                        <span>UV Index</span>
-                        <span class="fw-bold">5 (Moderate)</span>
-                    </div>
-                    <div class="uv-bar-bg"></div>
-                    <div class="uv-labels">
-                        <span>Low</span>
-                        <span>Moderate</span>
-                        <span>High</span>
-                        <span>Extreme</span>
-                    </div>
-                </div>
-
             </div>
             
-            <!-- Daily Forecast View -->
             <?php if (isset($dailyForecast) && count($dailyForecast) > 0): ?>
             <section class="mt-5">
                 <h4 class="h5 fw-bold mb-4 text-secondary">5-Day Forecast</h4>
@@ -551,21 +390,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
     </div>
     
-    <!-- Dependencies and Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="assets/js/script.js"></script>
     
-    <script>
-        // Synchronize interface state and handle fallbacks.
-        document.addEventListener('DOMContentLoaded', function() {
-            // Trigger client-side location fallback if server-side identification fails.
-            <?php if ($clientSideFallback): ?>
-                console.warn("City not found by server. Switching to client-side geolocation...");
-                setTimeout(function() {
-                    getLocation(); 
-                }, 1500);
-            <?php endif; ?>
-        });
-    </script>
 </body>
 </html>
