@@ -34,20 +34,17 @@ $api_key_warning = (API_KEY === 'YOUR_API_KEY_HERE');
 // DATABASE SETTINGS (MySQL/XAMPP)
 // ============================================================================
 
-// Where is your database? For XAMPP, it's always 'localhost'
-define('DB_HOST', 'localhost');
+// ============================================================================
+// DATABASE SETTINGS
+// ============================================================================
 
-// What's the name of your database? We created this in setup_database.php
-define('DB_NAME', 'weather_app');
-
-// Username for database access (XAMPP default is 'root')
-define('DB_USER', 'root');
-
-// Password for database (XAMPP has no password by default)
-define('DB_PASS', '');
-
-// Character encoding - UTF-8 supports all languages and emojis! 🌍
+// Use environment variables for Vercel/Production, fallback to localhost for XAMPP
+define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+define('DB_NAME', getenv('DB_NAME') ?: 'weather_app');
+define('DB_USER', getenv('DB_USER') ?: 'root');
+define('DB_PASS', getenv('DB_PASS') ?: '');
 define('DB_CHARSET', 'utf8mb4');
+define('DB_PORT', getenv('DB_PORT') ?: '3306');
 
 // ============================================================================
 // SESSION & SECURITY SETTINGS
@@ -58,5 +55,12 @@ define('SESSION_LIFETIME', 86400);
 
 // Custom name for our session cookie (makes it unique to our app)
 define('SESSION_NAME', 'weather_app_session');
+
+// For Vercel/Serverless: Ensure sessions work without file access
+if (getenv('VERCEL') || getenv('railway')) {
+    // Use cookies to store session data or database (simplified for now)
+    ini_set('session.save_handler', 'files'); 
+    ini_set('session.save_path', '/tmp'); // Vercel allows writing to /tmp
+}
 
 ?>
