@@ -6,19 +6,20 @@
 
 require_once 'config.php';
 
-// Initialize authentication if database is available
+// Initialize authentication - try to load database, but don't fail if it's not available
 $currentUser = null;
-$authAvailable = false;
+$isUserLoggedIn = false;
 
 try {
     require_once 'db.php';  // Load database connection first
     require_once 'auth.php';  // Then load auth functions
     startSecureSession();
-    $currentUser = getUserData();  // Now safe to call getUserData()
-    $authAvailable = true;
+    $currentUser = getUserData();  // Try to get user data
+    $isUserLoggedIn = isLoggedIn(); // Check if logged in
 } catch (Exception $e) {
-    // Database not set up yet - auth features will be disabled
-    error_log("Auth initialization failed: " . $e->getMessage());
+    // Database not available - that's okay, just means user can't be logged in
+    // Auth buttons will still show so users can try to register/login
+    error_log("Database not available: " . $e->getMessage());
 }
 
 $weatherData = null;
@@ -282,7 +283,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="brand-area animate-in">
                 <i class="bi bi-cloud-haze2 weather-logo"></i>
                 <div class="brand-text">
-                    <?php if ($authAvailable && isLoggedIn() && $currentUser): ?>
+                    <?php if ($isUserLoggedIn && $currentUser): ?>
                         <h1>Hello, <?php echo htmlspecialchars($currentUser['username']); ?>! 👋</h1>
                         <p>Welcome back to your weather dashboard</p>
                     <?php else: ?>
@@ -294,12 +295,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             <div class="header-controls animate-in animate-delay-1">
                 
-                <?php if ($authAvailable && isLoggedIn() && $currentUser): ?>
+                <?php if ($isUserLoggedIn && $currentUser): ?>
                     <!-- Logged In - Show Logout Icon -->
                     <a href="logout.php" class="btn-auth btn-logout-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; background: #e74c3c; color: white; border-radius: 50%; text-decoration: none; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);" title="Logout">
                         <i class="bi bi-box-arrow-right" style="font-size: 1.2rem;"></i>
                     </a>
-                <?php elseif ($authAvailable): ?>
+                <?php else: ?>
                     <!-- Not Logged In - Show Auth Buttons -->
                     <div class="auth-buttons" style="display: flex; gap: 10px; align-items: center;">
                         <a href="login.php" class="btn-auth btn-login" style="text-decoration: none; padding: 10px 24px; background: rgba(255, 255, 255, 0.9); color: #667eea; border-radius: 10px; font-size: 0.95rem; font-weight: 600; transition: all 0.3s ease; border: 2px solid #667eea;">
@@ -344,7 +345,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <p>Get real-time weather updates for any city using OpenWeatherMap data.</p>
         </section>
         
-        <?php if ($authAvailable && isLoggedIn() && isset($_GET['welcome'])): ?>
+        <?php if ($isUserLoggedIn && isset($_GET['welcome'])): ?>
         <section class="animate-in">
             <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
                 <i class="bi bi-check-circle-fill me-2"></i>
