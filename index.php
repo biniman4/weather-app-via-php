@@ -510,10 +510,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script>
         // Synchronize interface state and handle fallbacks.
         document.addEventListener('DOMContentLoaded', function() {
-            if(document.getElementById('tempUnit') && document.getElementById('tempUnit').innerText.includes('C')) {
-                 document.getElementById('unitToggle').checked = false; 
-            }
-
             // Trigger client-side location fallback if server-side identification fails.
             <?php if ($clientSideFallback): ?>
                 console.warn("City not found by server. Switching to client-side geolocation...");

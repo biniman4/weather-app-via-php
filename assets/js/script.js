@@ -174,11 +174,9 @@ function quickSearch(cityName) {
  */
 function toggleUnitFromHeader() {
     const unitToggle = document.getElementById('unitToggle');
-    isCelsius = !unitToggle.checked;
-
-    if (document.getElementById('tempValue')) {
-        toggleTemperatureUnit();
-    }
+    // The toggle state should drive the isCelsius state directly.
+    // unitToggle.checked = true means Fahrenheit, so isCelsius should be false.
+    toggleTemperatureUnit(!unitToggle.checked);
 }
 
 /**
@@ -202,7 +200,7 @@ function toggleMode() {
  */
 async function loadStaticWeatherData() {
     try {
-        const response = await fetch('assets/data/sample-weather.json');
+        const response = await fetch(`assets/data/sample-weather.json?v=${new Date().getTime()}`);
         const data = await response.json();
         staticWeatherData = data.cities;
     } catch (error) {
@@ -279,13 +277,16 @@ function toggleTemperatureUnit(forceCelsius = null) {
 
     if (!tempValue) return;
 
-    // Use current state or force a specific mode.
+    // Determine the target state.
     const targetIsCelsius = forceCelsius !== null ? forceCelsius : !isCelsius;
+
+    // Update the global state.
+    isCelsius = targetIsCelsius;
 
     const celsiusTemp = parseFloat(tempValue.dataset.celsius);
     const celsiusFeelsLike = parseFloat(feelsLikeValue?.dataset.celsius || 0);
 
-    if (!targetIsCelsius) {
+    if (!isCelsius) {
         // Converting to Fahrenheit
         const fTemp = Math.round((celsiusTemp * 9 / 5) + 32);
         tempValue.textContent = fTemp;
@@ -294,7 +295,6 @@ function toggleTemperatureUnit(forceCelsius = null) {
             feelsLikeValue.textContent = Math.round((celsiusFeelsLike * 9 / 5) + 32);
             feelsLikeUnit.textContent = '°F';
         }
-        isCelsius = false;
 
         document.querySelectorAll('.temp-val').forEach(el => {
             if (el.dataset.celsius) {
@@ -309,7 +309,6 @@ function toggleTemperatureUnit(forceCelsius = null) {
             feelsLikeValue.textContent = Math.round(celsiusFeelsLike);
             feelsLikeUnit.textContent = '°C';
         }
-        isCelsius = true;
 
         document.querySelectorAll('.temp-val').forEach(el => {
             if (el.dataset.celsius) {
@@ -318,7 +317,7 @@ function toggleTemperatureUnit(forceCelsius = null) {
         });
     }
 
-    // Sync header toggle if needed.
+    // Sync header toggle state.
     const unitToggle = document.getElementById('unitToggle');
     if (unitToggle) unitToggle.checked = !isCelsius;
 }
