@@ -1,9 +1,9 @@
 <?php
-// Proxy entry point for Vercel deployment
-// This file satisfies the Vercel requirement of having PHP functions in an 'api' directory
+// This is the entry point for Vercel deployment.
+// It ensures that the app runs correctly within Vercel's serverless function structure.
 
-// 1. Move the execution pointer to the project root
+// Point to the project root so scripts can find required files.
 chdir(__DIR__ . '/../');
 
-// 2. Include the main application file
+// Load the main application.
 require_once 'index.php';
