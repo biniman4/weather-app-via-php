@@ -6,20 +6,28 @@
 
 require_once 'config.php';
 require_once 'auth.php';
-require_once 'db.php';
+
+$dbConnected = false;
+try {
+    require_once 'db.php';
+    $dbConnected = true;
+} catch (Exception $e) {
+    error_log("Database connection failed: " . $e->getMessage());
+    $error = "System is currently undergoing maintenance. Please try again later.";
+}
 
 startSecureSession();
 
 // Redirect if already logged in
-if (isLoggedIn()) {
+if ($dbConnected && isLoggedIn()) {
     header("Location: dashboard.php");
     exit;
 }
 
-$error = '';
+$error = $error ?? ''; // Preserve existing error if any
 $success = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($dbConnected && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = sanitizeInput($_POST['username'] ?? '');
     $email = sanitizeInput($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
